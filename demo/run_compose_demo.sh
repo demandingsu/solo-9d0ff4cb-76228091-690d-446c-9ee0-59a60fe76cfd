@@ -21,4 +21,10 @@ curl -s -X POST http://127.0.0.1:8000/query \
   -d '{"index_url":"http://notice-site:8080/index.html","query_time":"'"$QUERY_TIME"'"}'
 
 echo
+echo "== 采集质量诊断（改版后栏目 v2/） =="
+curl -s -X POST http://127.0.0.1:8000/diagnose \
+  -H 'Content-Type: application/json' \
+  -d '{"index_url":"http://notice-site:8080/v2/index.html"}'
+
+echo
 echo "演示完成，停止服务: docker compose down"

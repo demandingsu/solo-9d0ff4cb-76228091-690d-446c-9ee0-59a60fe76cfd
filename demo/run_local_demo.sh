@@ -22,12 +22,12 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# 2) 启动示例公告站（8080）
-( cd "$ROOT/site/html" && "$PY" -I -m http.server 8080 --bind 127.0.0.1 ) &
+# 2) 启动示例公告站（8080）；exec 让 $! 直接指向服务进程，保证退出时清理干净
+( cd "$ROOT/site/html" && exec "$PY" -I -m http.server 8080 --bind 127.0.0.1 ) &
 SITE_PID=$!
 
 # 3) 启动采集 API（8000）
-( cd "$ROOT/app" && "$PY" -I -m uvicorn app.main:app --host 127.0.0.1 --port 8000 ) &
+( cd "$ROOT/app" && exec "$PY" -I -m uvicorn app.main:app --host 127.0.0.1 --port 8000 ) &
 API_PID=$!
 
 for _ in $(seq 1 40); do
@@ -39,3 +39,9 @@ echo "== 查询时刻: $QUERY_TIME =="
 curl -s -X POST http://127.0.0.1:8000/query \
   -H 'Content-Type: application/json' \
   -d "{\"index_url\":\"$SITE_URL\",\"query_time\":\"$QUERY_TIME\"}" | "$PY" -I -m json.tool
+
+echo
+echo "== 采集质量诊断（改版后栏目 v2/） =="
+curl -s -X POST http://127.0.0.1:8000/diagnose \
+  -H 'Content-Type: application/json' \
+  -d '{"index_url":"http://127.0.0.1:8080/v2/index.html"}' | "$PY" -I -m json.tool
